@@ -191,12 +191,12 @@ struct PressureView: View {
             loadingManager.show()
             Task{
                 //Column_1
-                A_1 = formatValue(input_first)
-                B_1 = formatValue(input_second)
-                C_1 = formatValue(input_second)
-                E_1 = formatValue(input_first)
-                F_1 = formatValue(input_second)
-                G_1 = formatValue(input_second)
+                A_1 = formatValue(input_second)
+                B_1 = formatValue(input_first)
+                C_1 = formatValue(input_first)
+                E_1 = formatValue(input_second)
+                F_1 = formatValue(input_first)
+                G_1 = formatValue(input_first)
                 
                 //
                 G_3 = formatValue(input_third)
@@ -209,7 +209,7 @@ struct PressureView: View {
                 D_2 = A_2
                 E_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: E_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
                 F_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: F_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
-                G_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: G_3, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+                G_2 = formatValue(ExcelDataModel.shared.PSIG_vlookup(lookupValue: G_3, tableArray: PSIG_rows, columnIndex: 2) ?? "")
                 
                 //Column_3
                 A_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: A_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
