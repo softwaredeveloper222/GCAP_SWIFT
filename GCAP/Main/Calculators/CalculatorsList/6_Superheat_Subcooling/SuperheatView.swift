@@ -73,7 +73,7 @@ struct SuperheatView: View {
                                 }
                                 
                                 Button(action: goHome) {
-                                    Text("Go to Home")
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -168,6 +168,7 @@ struct SuperheatView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#F9F9F9"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -256,7 +257,27 @@ struct SuperheatView: View {
     }
     
     private func goHome() {
-        dismiss()
+        let temperature = ExcelDataModel.shared.Superheat_vlookup(lookupValue: Pressure, tableArray: Superheat_rows, columnIndex: 2) ?? "0"
+        
+        let b = Double(Temperature) ?? 0
+        let c = Double(temperature) ?? 0
+        
+        var degree_value: Double = 0
+        
+        if b > c {
+            condition_flag = "#FF0000"
+            degree_value = b - c
+            Condition = "SUPERHEATED"
+        }
+        else{
+            condition_flag = "#0000FF"
+            degree_value = c - b
+            Condition = "SUBCOLLED"
+        }
+        
+        SAT_Temperature = String(c)
+        Degrees = String(degree_value)
+//        dismiss()
     }
 }
 

@@ -112,7 +112,7 @@ struct FahrenheitView: View {
                                 }
                                 
                                 Button(action: goHome) {
-                                    Text("Go to Home")
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -210,6 +210,7 @@ struct FahrenheitView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#EEF6FB"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 12))
@@ -229,7 +230,32 @@ struct FahrenheitView: View {
     }
     
     private func goHome() {
-        dismiss()
+        if !temperature.isEmpty {
+            let doubleValue = Double(temperature)
+            let isValid = doubleValue != nil && (-65...125).contains(doubleValue!)
+            
+            Task{
+                if isValid == true {
+                    psig = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 2) ?? ""
+                    
+                    psia = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 3) ?? ""
+                    
+                    cvLiquid = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 4) ?? ""
+                    
+                    cvVapor = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 5) ?? ""
+                    
+                    densityLiquid = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 6) ?? ""
+                    
+                    densityVapor = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 7) ?? ""
+                    
+                }
+            }
+            
+            withAnimation(.easeInOut(duration: 0.3)) {
+                show_notification = !isValid
+            }
+        }
+//        dismiss()
     }
     
    }

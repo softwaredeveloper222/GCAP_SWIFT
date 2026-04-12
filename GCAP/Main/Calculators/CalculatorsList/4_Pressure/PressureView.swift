@@ -128,7 +128,7 @@ struct PressureView: View {
                                 }
                                 
                                 Button(action: goHome) {
-                                    Text("Go to Home")
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -299,6 +299,7 @@ struct PressureView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#F9F9F9"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -362,7 +363,99 @@ struct PressureView: View {
     }
     
     private func goHome() {
-        dismiss()
+        loadingManager.show()
+        Task{
+            //Column_1
+            A_1 = formatValue(input_second)
+            B_1 = formatValue(input_first)
+            C_1 = formatValue(input_first)
+            E_1 = formatValue(input_second)
+            F_1 = formatValue(input_first)
+            G_1 = formatValue(input_first)
+            
+            //
+            G_3 = formatValue(input_third)
+            
+            
+            //Column_2
+            A_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: A_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
+            B_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: B_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
+            C_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: C_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
+            D_2 = A_2
+            E_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: E_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
+            F_2 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: F_1, tableArray: PSIF_rows, columnIndex: 3) ?? "")
+            G_2 = formatValue(ExcelDataModel.shared.PSIG_vlookup(lookupValue: G_3, tableArray: PSIG_rows, columnIndex: 2) ?? "")
+            
+            //Column_3
+            A_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: A_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+            B_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: B_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+            C_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: C_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+            D_3 = A_3
+            E_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: E_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+            F_3 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: F_1, tableArray: PSIF_rows, columnIndex: 2) ?? "")
+            
+            //Column_4
+            A_4 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: A_1, tableArray: PSIF_rows, columnIndex: 8) ?? "")
+            B_4 = A_4
+            C_4 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: C_1, tableArray: PSIF_rows, columnIndex: 9) ?? "")
+            D_4 = ""//recalc
+            E_4 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: E_1, tableArray: PSIF_rows, columnIndex: 9) ?? "")
+            F_4 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: F_1, tableArray: PSIF_rows, columnIndex: 8) ?? "")
+            G_4 = F_4
+            
+            
+            //Column_5
+            let res1 = normalizeCellRef(vlookup(lookupValue: C_2, sheet: "Sheet3", startRef: "F1", endRef: "I182", colIndex: 3, workbook: wb) ?? "")
+            let res2 = normalizeCellRef(vlookup(lookupValue: C_2, sheet: "Sheet3", startRef: "F1", endRef: "I182", colIndex: 4, workbook: wb) ?? "")
+            
+            let res3 = vlookup(lookupValue: input_forth, sheet: "Sheet2", startRef: res1, endRef: res2, colIndex: 6, workbook: wb) ?? ""
+            
+            C_5 = formatValue(res3)
+            D_5 = C_5
+            E_5 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: E_1, tableArray: PSIF_rows, columnIndex: 10) ?? "")
+            
+            let rest_cell1 = normalizeCellRef(vlookup(lookupValue: A_2, sheet: "Sheet3", startRef: "A1", endRef: "D82", colIndex: 3, workbook: wb) ?? "")
+            let rest_cell2 = normalizeCellRef(vlookup(lookupValue: A_2, sheet: "Sheet3", startRef: "A1", endRef: "D82", colIndex: 4, workbook: wb) ?? "")
+            let rest_d_1 = vlookup(lookupValue: D_5, sheet: "Sheet2", startRef: rest_cell1, endRef: rest_cell2, colIndex: 2, workbook: wb) ?? ""
+            
+            D_1 = formatValue(rest_d_1)
+            
+            let rest_d_4 = formatValue(vlookup(lookupValue: D_5, sheet: "Sheet2", startRef: rest_cell1, endRef: rest_cell2, colIndex: 6, workbook: wb) ?? "")
+            
+            D_4 = rest_d_4
+            
+            
+            //Below Table
+            let a = Double(C_4) ?? 0
+            let b = Double(B_4) ?? 0
+            Row_1 = formatValue(String(a - b))
+            
+            Row_2 = formatValue(D_1)
+            
+            let result = 200 / (a - b)
+            Row_3 = formatValue(String(result))
+            
+            Row_4 = formatValue(ExcelDataModel.shared.PSIF_vlookup(lookupValue: C_1, tableArray: PSIF_rows, columnIndex: 5) ?? "")
+            
+            let d = Double(D_4) ?? 0//c_4
+            Row_5 = formatValue(String((d - a) / 42.44 * result))
+            
+            let e = Double(Row_4) ?? 0
+            Row_6 = formatValue(String(result * e))
+            
+            let g = Double(A_2) ?? 0
+            let h = Double(C_2) ?? 0
+            Row_7 = formatValue(String(g / h))
+            
+            let i = Double(F_4) ?? 0
+            Row_8 = formatValue(String(a - i))
+            
+            Row_9 = formatValue(String(b - i))
+            //
+            
+            loadingManager.hide()
+        }
+//        dismiss()
     }
     
 }

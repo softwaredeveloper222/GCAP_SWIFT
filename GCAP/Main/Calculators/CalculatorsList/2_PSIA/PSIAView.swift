@@ -116,7 +116,7 @@ struct PSIAView: View {
                                 }
                                 
                                 Button(action: goHome) {
-                                    Text("Go to Home")
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -208,6 +208,7 @@ struct PSIAView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#EEF6FB"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 12))
@@ -227,7 +228,27 @@ struct PSIAView: View {
     }
     
     private func goHome() {
-        dismiss()
+        if !psia.isEmpty {
+            let doubleValue = Double(psia)
+            let isValid = doubleValue != nil && (2.69...307.08).contains(doubleValue!)
+            
+            Task{
+                if isValid == true {
+                    psig = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 2) ?? ""
+                    cvLiquid = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 3) ?? ""
+                    cvVapor = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 4) ?? ""
+                    densityLiquid = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 5) ?? ""
+                    densityVapor = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 6) ?? ""
+                    temperature = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 7) ?? ""
+                }
+            }
+            
+            
+            withAnimation(.easeInOut(duration: 0.3)) {
+                show_notification = !isValid
+            }
+        }
+//        dismiss()
     }
     
     

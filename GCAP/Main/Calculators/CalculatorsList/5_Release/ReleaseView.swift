@@ -109,8 +109,8 @@ struct ReleaseView: View {
                                         .cornerRadius(4)
                                 }
                                 
-                                Button(action: goHome) {
-                                    Text("Go to Home")
+                                Button(action: goHome_1) {
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -165,8 +165,8 @@ struct ReleaseView: View {
                                         .cornerRadius(4)
                                 }
                                 
-                                Button(action: goHome) {
-                                    Text("Go to Home")
+                                Button(action: goHome_2) {
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -221,8 +221,8 @@ struct ReleaseView: View {
                                         .cornerRadius(4)
                                 }
                                 
-                                Button(action: goHome) {
-                                    Text("Go to Home")
+                                Button(action: goHome_3) {
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -277,8 +277,8 @@ struct ReleaseView: View {
                                         .cornerRadius(4)
                                 }
                                 
-                                Button(action: goHome) {
-                                    Text("Go to Home")
+                                Button(action: goHome_4) {
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -336,8 +336,8 @@ struct ReleaseView: View {
                                         .cornerRadius(4)
                                 }
                                 
-                                Button(action: goHome) {
-                                    Text("Go to Home")
+                                Button(action: goHome_5) {
+                                    Text("Go to")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -495,6 +495,7 @@ struct ReleaseView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#F9F9F9"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -542,6 +543,7 @@ struct ReleaseView: View {
             TextField("", text: value)
                 .padding(10)
                 .background(Color(hex: "#EEF6FB"))
+                .foregroundStyle(Color.black)
                 .cornerRadius(8)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 12, weight: .semibold))
@@ -593,8 +595,93 @@ struct ReleaseView: View {
         Room_level_Total_nh3 = ""
     }
     
-    private func goHome() {
-        dismiss()
+    private func goHome_1() {
+        let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Liquid_realease_Round_opening_Gauge, tableArray: PSIG_rows, columnIndex: 5) ?? "0"
+        
+        let a = Double(Liquid_realease_Round_opening_Diameter) ?? 0
+        let b = Double(Liquid_realease_Round_opening_Number) ?? 0
+        let c = Double(Liquid_realease_Round_opening_Gauge) ?? 0
+        let d = Double(temperature) ?? 0
+        
+        let LiquidFlowRate = 26.81 * a * a * sqrt(c * d)
+        
+        let TotalLiquidReleased = LiquidFlowRate * b
+        
+        Liquid_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
+        Liquid_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+    }
+    private func goHome_2() {
+        let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Liquid_realease_Irregular_release_Gauge, tableArray: PSIG_rows, columnIndex: 5) ?? "0"
+        
+        let a = Double(Liquid_realease_Irregular_release_Area_of_leak) ?? 0
+        let b = Double(Liquid_realease_Irregular_release_Number) ?? 0
+        let c = Double(Liquid_realease_Irregular_release_Gauge) ?? 0
+        let d = Double(temperature) ?? 0
+        
+        let LiquidFlowRate = 34.133 * a * sqrt(c * d)
+        
+        let TotalLiquidReleased = LiquidFlowRate * b
+        
+        Liquid_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
+        Liquid_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+    }
+    private func goHome_3() {
+        let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Round_opening_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
+        
+        let a = Double(Gas_realease_Round_opening_Diameter) ?? 0
+        let b = Double(Gas_realease_Round_opening_Number) ?? 0
+        let c = Double(Gas_realease_Round_opening_Gauge) ?? 0
+        let d = Double(temperature) ?? 0
+        
+        var LiquidFlowRate: Double = 0
+        
+        if c > 0 {
+            LiquidFlowRate = (15.48 * a * a * (c + 14.7) * c) / (sqrt(d + 459) * c)
+        }
+        
+        let TotalLiquidReleased = LiquidFlowRate * b
+        
+        Gas_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
+        Gas_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+    }
+    private func goHome_4() {
+        let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Irregular_release_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
+        
+        let a = Double(Gas_realease_Irregular_release_Area_of_leak) ?? 0
+        let b = Double(Gas_realease_Irregular_release_Number) ?? 0
+        let c = Double(Gas_realease_Irregular_release_Gauge) ?? 0
+        let d = Double(temperature) ?? 0
+        
+        var LiquidFlowRate: Double = 0
+        
+        if c > 0 {
+            LiquidFlowRate = (19.71 * a * (c + 14.66)) / sqrt(d + 459)
+        }
+        
+        let TotalLiquidReleased = LiquidFlowRate * b
+        
+        Gas_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
+        Gas_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+    }
+    private func goHome_5() {
+        let temperature = ExcelDataModel.shared.PSIF_vlookup(lookupValue: Room_level_Width_of_room_2, tableArray: PSIF_rows, columnIndex: 7) ?? "0"
+        
+        let a = Double(Room_level_Length_of_room) ?? 0
+        let b = Double(Room_level_Height_of_room) ?? 0
+        let c = Double(Room_level_Width_of_room_1) ?? 0
+        let d = Double(Room_level_Width_of_room_2) ?? 0
+        let e = Double(Room_level_Width_of_room_3) ?? 0
+        let f = Double(temperature) ?? 0
+        
+        let result = a * b * c
+        
+        let result1 = result * f * (e / 1000000)
+        
+        Room_level_Total_room_value =  ExcelDataModel.shared.formatValue(String(result)) ?? ""
+        
+        Room_level_Vapor_density = ExcelDataModel.shared.formatValue(temperature) ?? ""
+        
+        Room_level_Total_nh3 = String(result1)
     }
 }
 

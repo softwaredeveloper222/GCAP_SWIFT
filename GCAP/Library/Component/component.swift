@@ -47,6 +47,7 @@ struct DualAlignedTextField: View {
                 .onSubmit {
                     checkValue = Int(arc4random())
                 }
+                .foregroundStyle(Color.black)
         }
     }
 }
@@ -168,6 +169,7 @@ struct CustomTextEditor: View {
                     .frame(minHeight: 100)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
+//                    .foregroundStyle(Color.black)
                     .focused($isFocused)
                     .font(.system(size: 12))
             }
