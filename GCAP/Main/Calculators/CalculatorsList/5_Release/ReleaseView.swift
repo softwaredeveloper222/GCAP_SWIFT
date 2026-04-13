@@ -110,7 +110,7 @@ struct ReleaseView: View {
                                 }
                                 
                                 Button(action: goHome_1) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -166,7 +166,7 @@ struct ReleaseView: View {
                                 }
                                 
                                 Button(action: goHome_2) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -222,7 +222,7 @@ struct ReleaseView: View {
                                 }
                                 
                                 Button(action: goHome_3) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -278,7 +278,7 @@ struct ReleaseView: View {
                                 }
                                 
                                 Button(action: goHome_4) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
@@ -337,7 +337,7 @@ struct ReleaseView: View {
                                 }
                                 
                                 Button(action: goHome_5) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)

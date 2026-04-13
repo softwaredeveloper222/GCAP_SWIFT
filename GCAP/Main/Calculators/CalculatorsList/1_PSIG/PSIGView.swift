@@ -120,7 +120,7 @@ struct PSIGView: View {
                                 }
                                 
                                 Button(action: goHome) {
-                                    Text("Go to")
+                                    Text("Calculate")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
