@@ -93,6 +93,10 @@ struct SafetyDaysWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
+        webView.isOpaque = false
+        webView.backgroundColor = .white
+        webView.scrollView.backgroundColor = .white
+        webView.underPageBackgroundColor = .white
         webView.addObserver(context.coordinator, forKeyPath: "estimatedProgress", options: .new, context: nil)
         webView.addObserver(context.coordinator, forKeyPath: "canGoBack", options: .new, context: nil)
 
