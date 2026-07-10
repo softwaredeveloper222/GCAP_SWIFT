@@ -25,6 +25,8 @@ struct GCAPApp: App {
                     .zIndex(1)
                     .ignoresSafeArea()
                     .task{
+                        CalculatorAnalytics.shared.initIfNeeded()
+
                         try? await Task.sleep(nanoseconds: 100_000_000)
                         
                         await ExcelDataModel.shared.loadExcel_PSIG()

@@ -72,6 +72,7 @@ struct PressureView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.pressureEnthalpy)
     
     
     var body: some View {
@@ -82,6 +83,8 @@ struct PressureView: View {
                 LoadingOverlayView()
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -279,6 +282,7 @@ struct PressureView: View {
                 //
                 
                 loadingManager.hide()
+                analytics.trackCalculation(success: true)
             }
         }
     }
@@ -330,6 +334,15 @@ struct PressureView: View {
                 }
                 .onSubmit {
                     changedValue = Int(arc4random())
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            changedValue = Int(arc4random())
+                        }
+                    }
                 }
         }
     }
@@ -454,6 +467,7 @@ struct PressureView: View {
             //
             
             loadingManager.hide()
+            analytics.trackCalculation(success: true)
         }
 //        dismiss()
     }

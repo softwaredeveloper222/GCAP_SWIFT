@@ -13,6 +13,7 @@ struct DualAlignedTextField: View {
     @Binding var checkValue: Int
     @Binding var text: String
     var placeholder: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         ZStack(alignment: .leading) {
@@ -26,6 +27,7 @@ struct DualAlignedTextField: View {
             
             TextField("", text: $text)
                 .keyboardType(.decimalPad)
+                .focused($isFocused)
                 .onChange(of: $text.wrappedValue) { newValue in
                     var filtered = newValue.filter { $0.isNumber || $0 == "." || $0 == "-" }
                     
@@ -45,10 +47,23 @@ struct DualAlignedTextField: View {
                 .multilineTextAlignment(.leading)
                 .font(.system(size: 12))
                 .onSubmit {
-                    checkValue = Int(arc4random())
+                    submit()
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            submit()
+                        }
+                    }
                 }
                 .foregroundStyle(Color.black)
         }
+    }
+
+    private func submit() {
+        isFocused = false
+        checkValue = Int(arc4random())
     }
 }
 

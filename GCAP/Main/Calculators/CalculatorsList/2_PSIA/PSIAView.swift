@@ -28,6 +28,7 @@ struct PSIAView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psia)
 
     
     var body: some View {
@@ -48,6 +49,8 @@ struct PSIAView: View {
                 }
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -169,26 +172,7 @@ struct PSIAView: View {
             }            
         }
         .onChange(of: check_value){
-            if !psia.isEmpty {
-                let doubleValue = Double(psia)
-                let isValid = doubleValue != nil && (2.69...307.08).contains(doubleValue!)
-                
-                Task{
-                    if isValid == true {
-                        psig = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 2) ?? ""
-                        cvLiquid = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 3) ?? ""
-                        cvVapor = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 4) ?? ""
-                        densityLiquid = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 5) ?? ""
-                        densityVapor = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 6) ?? ""
-                        temperature = ExcelDataModel.shared.PSIA_vlookup(lookupValue: psia, tableArray: PSIA_rows, columnIndex: 7) ?? ""
-                    }
-                }
-                
-                
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    show_notification = !isValid
-                }
-            }
+            performCalculation()
         }
     }
     
@@ -228,6 +212,10 @@ struct PSIAView: View {
     }
     
     private func goHome() {
+        performCalculation()
+    }
+
+    private func performCalculation() {
         if !psia.isEmpty {
             let doubleValue = Double(psia)
             let isValid = doubleValue != nil && (2.69...307.08).contains(doubleValue!)
@@ -243,12 +231,11 @@ struct PSIAView: View {
                 }
             }
             
-            
+            analytics.trackCalculation(success: isValid)
             withAnimation(.easeInOut(duration: 0.3)) {
                 show_notification = !isValid
             }
         }
-//        dismiss()
     }
     
     

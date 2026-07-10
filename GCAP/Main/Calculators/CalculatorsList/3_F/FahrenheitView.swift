@@ -28,6 +28,7 @@ struct FahrenheitView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.fahrenheit)
     
     var body: some View {
         ZStack{
@@ -47,6 +48,8 @@ struct FahrenheitView: View {
                     }
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -166,31 +169,7 @@ struct FahrenheitView: View {
             
         }
         .onChange(of: check_value){
-            if !temperature.isEmpty {
-                let doubleValue = Double(temperature)
-                let isValid = doubleValue != nil && (-65...125).contains(doubleValue!)
-                
-                Task{
-                    if isValid == true {
-                        psig = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 2) ?? ""
-                        
-                        psia = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 3) ?? ""
-                        
-                        cvLiquid = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 4) ?? ""
-                        
-                        cvVapor = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 5) ?? ""
-                        
-                        densityLiquid = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 6) ?? ""
-                        
-                        densityVapor = ExcelDataModel.shared.PSIF_vlookup(lookupValue: temperature, tableArray: PSIF_rows, columnIndex: 7) ?? ""
-                        
-                    }
-                }
-                
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    show_notification = !isValid
-                }
-            }
+            performCalculation()
         }
     }
     
@@ -230,6 +209,10 @@ struct FahrenheitView: View {
     }
     
     private func goHome() {
+        performCalculation()
+    }
+
+    private func performCalculation() {
         if !temperature.isEmpty {
             let doubleValue = Double(temperature)
             let isValid = doubleValue != nil && (-65...125).contains(doubleValue!)
@@ -251,11 +234,11 @@ struct FahrenheitView: View {
                 }
             }
             
+            analytics.trackCalculation(success: isValid)
             withAnimation(.easeInOut(duration: 0.3)) {
                 show_notification = !isValid
             }
         }
-//        dismiss()
     }
     
    }

@@ -25,6 +25,7 @@ struct SuperheatView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.superheatSubcooling)
     
     var body: some View {
         ZStack{
@@ -34,6 +35,8 @@ struct SuperheatView: View {
                 LoadingOverlayView()
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -129,26 +132,7 @@ struct SuperheatView: View {
             }
         }
         .onChange(of: chageValue){
-            let temperature = ExcelDataModel.shared.Superheat_vlookup(lookupValue: Pressure, tableArray: Superheat_rows, columnIndex: 2) ?? "0"
-            
-            let b = Double(Temperature) ?? 0
-            let c = Double(temperature) ?? 0
-            
-            var degree_value: Double = 0
-            
-            if b > c {
-                condition_flag = "#FF0000"
-                degree_value = b - c
-                Condition = "SUPERHEATED"
-            }
-            else{
-                condition_flag = "#0000FF"
-                degree_value = c - b
-                Condition = "SUBCOLLED"
-            }
-            
-            SAT_Temperature = String(c)
-            Degrees = String(degree_value)
+            performCalculation()
         }
     }
     
@@ -195,6 +179,15 @@ struct SuperheatView: View {
                 }
                 .onSubmit {
                     chageValue = Int(arc4random())
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            chageValue = Int(arc4random())
+                        }
+                    }
                 }
         }
     }
@@ -257,6 +250,10 @@ struct SuperheatView: View {
     }
     
     private func goHome() {
+        performCalculation()
+    }
+
+    private func performCalculation() {
         let temperature = ExcelDataModel.shared.Superheat_vlookup(lookupValue: Pressure, tableArray: Superheat_rows, columnIndex: 2) ?? "0"
         
         let b = Double(Temperature) ?? 0
@@ -277,7 +274,7 @@ struct SuperheatView: View {
         
         SAT_Temperature = String(c)
         Degrees = String(degree_value)
-//        dismiss()
+        analytics.trackCalculation(success: true)
     }
 }
 

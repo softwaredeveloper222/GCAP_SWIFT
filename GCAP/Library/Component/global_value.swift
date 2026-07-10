@@ -14,6 +14,7 @@ var GoHomeButtonFontSize: Double = UIDevice.current.userInterfaceIdiom == .pad ?
 
 var BASE_URL = "https://gcapcoolworks.com/api/"
 var IMAGE_URL = "https://gcapcoolworks.com/"
+var SAFETY_DAYS_URL = "https://safety-days.vercel.app/safety-days"
 
 var PSIG_rows: [PSIGExcelRow] = []
 var PSIA_rows: [PSIAExcelRow] = []

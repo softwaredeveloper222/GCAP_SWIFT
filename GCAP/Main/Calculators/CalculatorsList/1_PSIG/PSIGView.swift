@@ -28,6 +28,7 @@ struct PSIGView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psig)
     
     
     var body: some View {
@@ -48,6 +49,8 @@ struct PSIGView: View {
                     }
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -173,25 +176,7 @@ struct PSIGView: View {
             }
         }
         .onChange(of: check_value){
-            if !psig.isEmpty {
-                let doubleValue = Double(psig)
-                let isValid = doubleValue != nil && (-20.4...293.1).contains(doubleValue!)
-                Task{
-                    if isValid == true {
-                        psia = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 2) ?? ""
-                        cvLiquid = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 3) ?? ""
-                        cvVapor = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 4) ?? ""
-                        densityLiquid = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 5) ?? ""
-                        densityVapor = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 6) ?? ""
-                        temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: psig, tableArray: PSIG_rows, columnIndex: 7) ?? ""
-                    }
-                }
-                
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    show_notification = !isValid
-                }
-            }
-            
+            performCalculation()
         }
     }
     
@@ -236,6 +221,10 @@ struct PSIGView: View {
     }
     
     private func goHome() {
+        performCalculation()
+    }
+
+    private func performCalculation() {
         if !psig.isEmpty {
             let doubleValue = Double(psig)
             let isValid = doubleValue != nil && (-20.4...293.1).contains(doubleValue!)
@@ -250,11 +239,11 @@ struct PSIGView: View {
                 }
             }
             
+            analytics.trackCalculation(success: isValid)
             withAnimation(.easeInOut(duration: 0.3)) {
                 show_notification = !isValid
             }
         }
-//        dismiss()
     }
 }
 

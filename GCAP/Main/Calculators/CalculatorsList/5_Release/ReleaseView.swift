@@ -55,6 +55,7 @@ struct ReleaseView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
+    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.release)
     
 //    init(path: Binding<NavigationPath>, headerText: String) {
 //        self._path = path
@@ -71,6 +72,8 @@ struct ReleaseView: View {
                 LoadingOverlayView()
             }
         }
+        .onAppear { analytics.onAppear() }
+        .onDisappear { analytics.onDisappear() }
     }
     
     var contentView: some View{
@@ -402,6 +405,7 @@ struct ReleaseView: View {
             
             Liquid_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
             Liquid_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+            analytics.trackCalculation(success: true)
         }
         .onChange(of: changed_second_card){
             
@@ -418,6 +422,7 @@ struct ReleaseView: View {
             
             Liquid_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
             Liquid_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+            analytics.trackCalculation(success: true)
         }
         .onChange(of: changed_third_card){
             let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Round_opening_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
@@ -437,6 +442,7 @@ struct ReleaseView: View {
             
             Gas_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
             Gas_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+            analytics.trackCalculation(success: true)
         }
         .onChange(of: changed_forth_card){
             let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Irregular_release_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
@@ -456,6 +462,7 @@ struct ReleaseView: View {
             
             Gas_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
             Gas_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+            analytics.trackCalculation(success: true)
         }
         .onChange(of: changed_fifth_card){
             let temperature = ExcelDataModel.shared.PSIF_vlookup(lookupValue: Room_level_Width_of_room_2, tableArray: PSIF_rows, columnIndex: 7) ?? "0"
@@ -476,6 +483,7 @@ struct ReleaseView: View {
             Room_level_Vapor_density = ExcelDataModel.shared.formatValue(temperature) ?? ""
             
             Room_level_Total_nh3 = String(result1)
+            analytics.trackCalculation(success: true)
         }
     }
     
@@ -524,6 +532,15 @@ struct ReleaseView: View {
                 .multilineTextAlignment(.leading)
                 .onSubmit {
                     changed_card.wrappedValue = Int(arc4random())
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            changed_card.wrappedValue = Int(arc4random())
+                        }
+                    }
                 }
         }
     }
@@ -609,6 +626,7 @@ struct ReleaseView: View {
         
         Liquid_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
         Liquid_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+        analytics.trackCalculation(success: true)
     }
     private func goHome_2() {
         let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Liquid_realease_Irregular_release_Gauge, tableArray: PSIG_rows, columnIndex: 5) ?? "0"
@@ -624,6 +642,7 @@ struct ReleaseView: View {
         
         Liquid_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
         Liquid_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+        analytics.trackCalculation(success: true)
     }
     private func goHome_3() {
         let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Round_opening_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
@@ -643,6 +662,7 @@ struct ReleaseView: View {
         
         Gas_realease_Round_opening_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
         Gas_realease_Round_opening_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+        analytics.trackCalculation(success: true)
     }
     private func goHome_4() {
         let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Gas_realease_Irregular_release_Gauge, tableArray: PSIG_rows, columnIndex: 7) ?? "0"
@@ -662,6 +682,7 @@ struct ReleaseView: View {
         
         Gas_realease_Irregular_release_Liquid_flow_rate =  ExcelDataModel.shared.formatValue(String(LiquidFlowRate)) ?? ""
         Gas_realease_Irregular_release_Liquid_flow_Total_liquid_released = ExcelDataModel.shared.formatValue(String(TotalLiquidReleased)) ?? ""
+        analytics.trackCalculation(success: true)
     }
     private func goHome_5() {
         let temperature = ExcelDataModel.shared.PSIF_vlookup(lookupValue: Room_level_Width_of_room_2, tableArray: PSIF_rows, columnIndex: 7) ?? "0"
@@ -682,6 +703,7 @@ struct ReleaseView: View {
         Room_level_Vapor_density = ExcelDataModel.shared.formatValue(temperature) ?? ""
         
         Room_level_Total_nh3 = String(result1)
+        analytics.trackCalculation(success: true)
     }
 }
 
