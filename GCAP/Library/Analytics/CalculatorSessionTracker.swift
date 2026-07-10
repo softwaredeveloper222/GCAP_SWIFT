@@ -19,11 +19,14 @@ final class CalculatorSessionTracker: ObservableObject {
     }
 
     func onAppear() {
-        // Keep the same session if SwiftUI re-calls onAppear without a real leave.
-        guard startedAt == nil else { return }
+        // New visit after a previous close — start a fresh open event.
+        if startedAt != nil && !didEndSession {
+            return
+        }
         didEndSession = false
         CalculatorAnalytics.shared.initIfNeeded()
         startedAt = Date()
+        NSLog("[CalculatorSessionTracker] opened \(calculatorId)")
         CalculatorAnalytics.shared.trackOpened(calculatorId: calculatorId, sessionId: sessionId)
     }
 
@@ -31,6 +34,7 @@ final class CalculatorSessionTracker: ObservableObject {
         guard !didEndSession, let startedAt else { return }
         didEndSession = true
         let durationMs = Int64(Date().timeIntervalSince(startedAt) * 1000)
+        NSLog("[CalculatorSessionTracker] closed \(calculatorId) durationMs=\(durationMs)")
         CalculatorAnalytics.shared.trackSessionEnd(
             calculatorId: calculatorId,
             sessionId: sessionId,
@@ -43,6 +47,7 @@ final class CalculatorSessionTracker: ObservableObject {
         let now = Date()
         guard now.timeIntervalSince(lastCalculationAt) >= debounceInterval else { return }
         lastCalculationAt = now
+        NSLog("[CalculatorSessionTracker] calculation \(calculatorId) success=\(success)")
         CalculatorAnalytics.shared.initIfNeeded()
         CalculatorAnalytics.shared.trackCalculation(
             calculatorId: calculatorId,

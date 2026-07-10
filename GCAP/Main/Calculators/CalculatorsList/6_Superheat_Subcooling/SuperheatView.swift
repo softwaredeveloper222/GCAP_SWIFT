@@ -35,8 +35,13 @@ struct SuperheatView: View {
                 LoadingOverlayView()
             }
         }
-        .onAppear { analytics.onAppear() }
-        .onDisappear { analytics.onDisappear() }
+        .task {
+            analytics.onAppear()
+            defer { analytics.onDisappear() }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
     }
     
     var contentView: some View{
