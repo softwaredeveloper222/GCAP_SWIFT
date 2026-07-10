@@ -44,7 +44,7 @@ final class CalculatorAnalytics {
 
     func trackSessionEnd(calculatorId: String, sessionId: String, durationMs: Int64) {
         send(baseEvent(
-            event: "calculator_closed",
+            event: "calculator_session_end",
             calculatorId: calculatorId,
             sessionId: sessionId,
             durationMs: durationMs
@@ -173,5 +173,7 @@ final class CalculatorAnalytics {
     private func savePendingEvents(_ events: [AnalyticsEventPayload]) {
         let data = (try? JSONEncoder().encode(events)) ?? Data()
         UserDefaults.standard.set(data, forKey: prefsKeyPending)
+        // Ensure the closed event is persisted before the view tears down.
+        UserDefaults.standard.synchronize()
     }
 }
