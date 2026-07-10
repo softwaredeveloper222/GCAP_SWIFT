@@ -15,9 +15,9 @@ struct SafetyDaysView: View {
 
     var body: some View {
         ZStack {
-            HeaderView(headerText: headerText)
+            HeaderView(headerText: headerText, showLogo: false)
             VStack(spacing: 0) {
-                Spacer().frame(height: Headerbar_Bottom_Padding_Size - 30)
+                Spacer().frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 130 : 110)
 
                 ZStack(alignment: .top) {
                     SafetyDaysWebView(

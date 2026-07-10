@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HeaderView: View {
     let headerText: String
+    var showLogo: Bool = true
     
     @State private var logo_height_pos: Int = 130
     @State private var logo_max_height: Int = 140
@@ -31,16 +32,18 @@ struct HeaderView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(hex: "#2D2F93"))
             
-            ZStack{
-                Image("logo")
-                    .resizable()
-                    .frame(width: UIDevice.current.userInterfaceIdiom == .pad ? 150 : 110, height: UIDevice.current.userInterfaceIdiom == .pad ? 150 : 110)
-                    .clipShape(Circle())
-                    .onTapGesture {
-                        UIApplication.shared.open(URL(string: BASE_URL)!)
-                    }
+            if showLogo {
+                ZStack{
+                    Image("logo")
+                        .resizable()
+                        .frame(width: UIDevice.current.userInterfaceIdiom == .pad ? 150 : 110, height: UIDevice.current.userInterfaceIdiom == .pad ? 150 : 110)
+                        .clipShape(Circle())
+                        .onTapGesture {
+                            UIApplication.shared.open(URL(string: BASE_URL)!)
+                        }
+                }
+                .position(x: geo.size.width / 2, y: CGFloat(logo_height_pos))
             }
-            .position(x: geo.size.width / 2, y: CGFloat(logo_height_pos))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
