@@ -4,26 +4,32 @@
 //
 
 import Foundation
+import Combine
 
-final class CalculatorSessionTracker {
+final class CalculatorSessionTracker: ObservableObject {
     private let calculatorId: String
     private let sessionId = UUID().uuidString
     private var startedAt: Date?
     private var lastCalculationAt: Date = .distantPast
     private let debounceInterval: TimeInterval = 0.5
+    private var didEndSession = false
 
     init(calculatorId: String) {
         self.calculatorId = calculatorId
     }
 
     func onAppear() {
+        // Keep the same session if SwiftUI re-calls onAppear without a real leave.
+        guard startedAt == nil else { return }
+        didEndSession = false
         CalculatorAnalytics.shared.initIfNeeded()
         startedAt = Date()
         CalculatorAnalytics.shared.trackOpened(calculatorId: calculatorId, sessionId: sessionId)
     }
 
     func onDisappear() {
-        guard let startedAt else { return }
+        guard !didEndSession, let startedAt else { return }
+        didEndSession = true
         let durationMs = Int64(Date().timeIntervalSince(startedAt) * 1000)
         CalculatorAnalytics.shared.trackSessionEnd(
             calculatorId: calculatorId,

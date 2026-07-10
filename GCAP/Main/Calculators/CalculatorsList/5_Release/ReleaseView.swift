@@ -55,7 +55,7 @@ struct ReleaseView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
-    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.release)
+    @StateObject private var analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.release)
     
 //    init(path: Binding<NavigationPath>, headerText: String) {
 //        self._path = path
@@ -373,6 +373,7 @@ struct ReleaseView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
+                    analytics.onDisappear()
                     dismiss()
                 }) {
                     HStack {

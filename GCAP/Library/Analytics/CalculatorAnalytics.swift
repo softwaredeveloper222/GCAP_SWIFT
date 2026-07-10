@@ -44,7 +44,7 @@ final class CalculatorAnalytics {
 
     func trackSessionEnd(calculatorId: String, sessionId: String, durationMs: Int64) {
         send(baseEvent(
-            event: "calculator_session_end",
+            event: "calculator_closed",
             calculatorId: calculatorId,
             sessionId: sessionId,
             durationMs: durationMs

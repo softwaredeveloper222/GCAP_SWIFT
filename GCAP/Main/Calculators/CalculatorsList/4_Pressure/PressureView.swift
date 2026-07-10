@@ -72,7 +72,7 @@ struct PressureView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
-    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.pressureEnthalpy)
+    @StateObject private var analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.pressureEnthalpy)
     
     
     var body: some View {
@@ -166,6 +166,7 @@ struct PressureView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
+                    analytics.onDisappear()
                     dismiss() // 👈 go back
                 }) {
                     HStack {

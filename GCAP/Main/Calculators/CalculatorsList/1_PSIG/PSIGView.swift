@@ -28,7 +28,7 @@ struct PSIGView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
-    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psig)
+    @StateObject private var analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psig)
     
     
     var body: some View {
@@ -158,6 +158,7 @@ struct PSIGView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
+                    analytics.onDisappear()
                     dismiss()
                 }) {
                     HStack {

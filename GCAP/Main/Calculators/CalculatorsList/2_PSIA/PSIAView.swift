@@ -28,7 +28,7 @@ struct PSIAView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
-    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psia)
+    @StateObject private var analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.psia)
 
     
     var body: some View {
@@ -154,6 +154,7 @@ struct PSIAView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
+                    analytics.onDisappear()
                     dismiss()
                 }) {
                     HStack {

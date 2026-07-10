@@ -25,7 +25,7 @@ struct SuperheatView: View {
     let headerText: String
     
     @StateObject private var loadingManager: LoadingManager = LoadingManager.shared
-    private let analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.superheatSubcooling)
+    @StateObject private var analytics = CalculatorSessionTracker(calculatorId: CalculatorIds.superheatSubcooling)
     
     var body: some View {
         ZStack{
@@ -114,6 +114,7 @@ struct SuperheatView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: {
+                    analytics.onDisappear()
                     dismiss()
                 }) {
                     HStack {
