@@ -24,7 +24,7 @@ struct SafetyDaysView: View {
                         url: URL(string: SAFETY_DAYS_URL)!,
                         model: webModel
                     )
-                    .padding(.horizontal, 12)
+                    // .padding(.horizontal, 12)
 
                     if webModel.isLoading {
                         ProgressView(value: webModel.progress)
