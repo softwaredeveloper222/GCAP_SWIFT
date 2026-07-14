@@ -4,14 +4,21 @@
 //
 
 import SwiftUI
-import WebKit
+
+/// Typography matched to gcaptraining.com/safety-days (Education Soul / Roboto).
+private enum SafetyDaysStyle {
+    static let heading = Color(hex: "#00387D")
+    static let body = Color(hex: "#727272")
+    static let pageBg = Color(hex: "#FBFBFB")
+}
 
 struct SafetyDaysView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var path: NavigationPath
     let headerText: String
 
-    @StateObject private var webModel = SafetyDaysWebModel()
+    @ObservedObject private var service = SafetyDaysNotificationService.shared
+    @State private var webDestination: SafetyDaysWebDestination?
 
     var body: some View {
         ZStack {
@@ -20,19 +27,50 @@ struct SafetyDaysView: View {
                 Spacer().frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 129 : 124)
 
                 ZStack(alignment: .top) {
-                    SafetyDaysWebView(
-                        url: URL(string: SAFETY_DAYS_URL)!,
-                        model: webModel
-                    )
-                    // .padding(.horizontal, 12)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if let content = service.payload?.content {
+                                SafetyDaysContentBody(
+                                    content: content,
+                                    onOpenWeb: { title, url in
+                                        webDestination = SafetyDaysWebDestination(
+                                            title: title,
+                                            urlString: url
+                                        )
+                                    }
+                                )
 
-                    if webModel.isLoading {
-                        ProgressView(value: webModel.progress)
-                            .progressViewStyle(.linear)
-                            .tint(Color(hex: "#2D2F93"))
-                            .padding(.horizontal, 12)
+                                if let version = service.payload?.version {
+                                    Text(
+                                        service.lastFetchFromNetwork && service.lastError == nil
+                                            ? "Updated · version \(version)"
+                                            : "Showing saved content · version \(version)"
+                                    )
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(hex: "#888888"))
+                                    .padding(.top, 8)
+                                }
+                            } else if service.isLoading {
+                                ProgressView("Loading Safety Days…")
+                                    .frame(maxWidth: .infinity, minHeight: 200)
+                            } else {
+                                Text(service.lastError ?? "Unable to load Safety Days.")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "#888888"))
+                                    .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
+                            }
+                        }
+                        .padding(20)
+                        .padding(.bottom, 36)
+                    }
+
+                    if service.isLoading && service.payload != nil {
+                        ProgressView()
+                            .tint(SafetyDaysStyle.heading)
+                            .padding(.top, 8)
                     }
                 }
+                .background(SafetyDaysStyle.pageBg)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -40,7 +78,7 @@ struct SafetyDaysView: View {
         .ignoresSafeArea()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(action: navigateBack) {
+                Button(action: { dismiss() }) {
                     HStack {
                         Image(systemName: "chevron.left")
                             .font(.system(size: GoHomeButtonFontSize, weight: .heavy))
@@ -49,153 +87,185 @@ struct SafetyDaysView: View {
                 }
             }
         }
-    }
-
-    private func navigateBack() {
-        if webModel.canGoBack {
-            webModel.goBack()
-        } else {
-            dismiss()
+        .navigationDestination(item: $webDestination) { destination in
+            SafetyDaysWebView(title: destination.title, urlString: destination.urlString)
+        }
+        .task {
+            await service.refresh()
+            service.markSeen()
         }
     }
 }
 
-final class SafetyDaysWebModel: ObservableObject {
-    @Published var isLoading = false
-    @Published var progress: Double = 0
-    @Published var canGoBack = false
+private struct SafetyDaysContentBody: View {
+    let content: SafetyDaysContent
+    let onOpenWeb: (String, String) -> Void
 
-    weak var webView: WKWebView?
-
-    func goBack() {
-        webView?.goBack()
+    private var benefitBullets: [String] {
+        content.bullets.filter { !$0.localizedCaseInsensitiveContains("sponsorship") }
     }
 
-    func updateCanGoBack() {
-        canGoBack = webView?.canGoBack ?? false
-    }
-}
-
-struct SafetyDaysWebView: UIViewRepresentable {
-    let url: URL
-    @ObservedObject var model: SafetyDaysWebModel
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(model: model)
-    }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.preferences.javaScriptCanOpenWindowsAutomatically = true
-        config.defaultWebpagePreferences.allowsContentJavaScript = true
-
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.navigationDelegate = context.coordinator
-        webView.uiDelegate = context.coordinator
-        webView.allowsBackForwardNavigationGestures = true
-        webView.isOpaque = false
-        webView.backgroundColor = .white
-        webView.scrollView.backgroundColor = .white
-        webView.underPageBackgroundColor = .white
-        webView.addObserver(context.coordinator, forKeyPath: "estimatedProgress", options: .new, context: nil)
-        webView.addObserver(context.coordinator, forKeyPath: "canGoBack", options: .new, context: nil)
-
-        context.coordinator.webView = webView
-        model.webView = webView
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-
-    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
-        uiView.removeObserver(coordinator, forKeyPath: "estimatedProgress")
-        uiView.removeObserver(coordinator, forKeyPath: "canGoBack")
-    }
-
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
-        let model: SafetyDaysWebModel
-        weak var webView: WKWebView?
-
-        init(model: SafetyDaysWebModel) {
-            self.model = model
+    private var dateDetailParagraphs: [String] {
+        var items: [String] = []
+        if let location = content.location, !location.isEmpty {
+            items.append("@  \(location)")
         }
+        if let price = content.priceAttendee, !price.isEmpty {
+            items.append(price)
+        }
+        if let price = content.priceExhibitor, !price.isEmpty {
+            items.append(price)
+        }
+        items.append(
+            contentsOf: content.bullets.filter {
+                $0.localizedCaseInsensitiveContains("sponsorship")
+            }
+        )
+        return items
+    }
 
-        override func observeValue(
-            forKeyPath keyPath: String?,
-            of object: Any?,
-            change: [NSKeyValueChangeKey: Any]?,
-            context: UnsafeMutableRawPointer?
-        ) {
-            if keyPath == "estimatedProgress", let webView {
-                DispatchQueue.main.async {
-                    self.model.progress = webView.estimatedProgress
-                    self.model.isLoading = webView.estimatedProgress < 1.0
+    var body: some View {
+        Group {
+            Text(content.title)
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(SafetyDaysStyle.heading)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineSpacing(4)
+
+            if let hero = content.heroImageUrl,
+               let heroUrl = URL(string: hero) {
+                AsyncImage(url: heroUrl) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFit()
+                    case .failure:
+                        Color.gray.opacity(0.2)
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        EmptyView()
+                    }
                 }
-            } else if keyPath == "canGoBack" {
-                DispatchQueue.main.async {
-                    self.model.updateCanGoBack()
+                .frame(maxWidth: .infinity)
+            }
+
+            if let subtitle = content.subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(SafetyDaysStyle.heading)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .lineSpacing(3)
+            }
+
+            if let eventName = content.eventName, !eventName.isEmpty {
+                Text(eventName)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(SafetyDaysStyle.heading)
+                    .padding(.top, 4)
+            }
+
+            if !benefitBullets.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(benefitBullets, id: \.self) { bullet in
+                        Text(bullet)
+                            .font(.system(size: 14))
+                            .foregroundColor(SafetyDaysStyle.body)
+                            .lineSpacing(4)
+                    }
                 }
             }
-        }
 
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            model.isLoading = false
-            model.updateCanGoBack()
-        }
-
-        func webView(
-            _ webView: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-        ) {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.allow)
-                return
+            if let dateLabel = content.dateLabel, !dateLabel.isEmpty {
+                Text("Date: \(dateLabel)")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(SafetyDaysStyle.heading)
+                    .padding(.top, 4)
             }
 
-            if isPdfUrl(url) {
-                openPdf(url, from: webView)
-                decisionHandler(.cancel)
-                return
-            }
-
-            decisionHandler(.allow)
-        }
-
-        func webView(
-            _ webView: WKWebView,
-            createWebViewWith configuration: WKWebViewConfiguration,
-            for navigationAction: WKNavigationAction,
-            windowFeatures: WKWindowFeatures
-        ) -> WKWebView? {
-            guard let url = navigationAction.request.url else { return nil }
-
-            if isPdfUrl(url) {
-                openPdf(url, from: webView)
-                return nil
-            }
-
-            // target=_blank — load in the main WebView
-            webView.load(URLRequest(url: url))
-            return nil
-        }
-
-        private func isPdfUrl(_ url: URL) -> Bool {
-            let path = url.path
-            return path.lowercased().hasSuffix(".pdf")
-        }
-
-        private func openPdf(_ url: URL, from webView: WKWebView) {
-            UIApplication.shared.open(url, options: [:]) { success in
-                if !success {
-                    let encoded = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? url.absoluteString
-                    if let viewer = URL(string: "https://docs.google.com/gview?embedded=true&url=\(encoded)") {
-                        DispatchQueue.main.async {
-                            webView.load(URLRequest(url: viewer))
+            if !dateDetailParagraphs.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(dateDetailParagraphs, id: \.self) { line in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("•")
+                                .font(.system(size: 14))
+                                .foregroundColor(SafetyDaysStyle.body)
+                            Text(line)
+                                .font(.system(size: 14))
+                                .foregroundColor(SafetyDaysStyle.body)
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
+                .padding(.leading, 4)
+            }
+
+            if let registerUrl = content.registerUrl, !registerUrl.isEmpty {
+                Button {
+                    onOpenWeb("Click Here to Register", registerUrl)
+                } label: {
+                    Text("Click Here to Register")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(SafetyDaysStyle.heading)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 16)
+            }
+
+            if let hotelsUrl = content.hotelsUrl, !hotelsUrl.isEmpty {
+                Button {
+                    onOpenWeb("Recommended Hotels", hotelsUrl)
+                } label: {
+                    Text("Link to Recommended Hotels")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(SafetyDaysStyle.heading)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+            }
+
+            if let body = content.bodyHtml, !body.isEmpty {
+                Text(body)
+                    .font(.system(size: 14))
+                    .foregroundColor(SafetyDaysStyle.body)
+                    .lineSpacing(4)
+                    .padding(.top, 4)
+            }
+
+            if !content.galleryImages.isEmpty {
+                VStack(spacing: 12) {
+                    ForEach(content.galleryImages) { image in
+                        if let url = URL(string: image.url) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let img):
+                                    img
+                                        .resizable()
+                                        .scaledToFit()
+                                case .failure:
+                                    Color.gray.opacity(0.15)
+                                case .empty:
+                                    ProgressView()
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .accessibilityLabel(image.alt ?? "Safety Days photo")
+                        }
+                    }
+                }
+                .padding(.top, 8)
             }
         }
     }

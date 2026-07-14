@@ -31,6 +31,8 @@ struct ContentView: View {
     @State private var path = NavigationPath()
     
     @State private var headerText = " "
+    @ObservedObject private var safetyDaysService = SafetyDaysNotificationService.shared
+    @ObservedObject private var pushNavigation = PushNavigationStore.shared
             
     var body: some View {
         NavigationStack(path: $path){
@@ -53,6 +55,16 @@ struct ContentView: View {
                                             .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold))
                                         
                                         Spacer()
+
+                                        if item.router == .safety_days && safetyDaysService.hasUnreadUpdate {
+                                            Text("New")
+                                                .font(.system(size: 11, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Color.red)
+                                                .cornerRadius(8)
+                                        }
                                         
                                         Image("right_arrow")
                                             .resizable()
@@ -74,6 +86,9 @@ struct ContentView: View {
                             .padding()
                             .padding(.bottom, 36)
                         }
+                        .refreshable {
+                            await safetyDaysService.refresh()
+                        }
                     }
                 }
             }
@@ -81,6 +96,15 @@ struct ContentView: View {
             .background(Color.white)
             .ignoresSafeArea()
             .navigationBarHidden(true)
+            .task {
+                await safetyDaysService.refresh()
+            }
+            .onAppear {
+                openPendingPushRouteIfNeeded()
+            }
+            .onChange(of: pushNavigation.pendingRoute) { _, _ in
+                openPendingPushRouteIfNeeded()
+            }
             .navigationDestination(for: AppRoute.self){ route in
                 switch route {
                 case .calculators:
@@ -111,6 +135,11 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    private func openPendingPushRouteIfNeeded() {
+        guard let route = pushNavigation.consumePendingRoute() else { return }
+        path.append(route)
     }
 
 }

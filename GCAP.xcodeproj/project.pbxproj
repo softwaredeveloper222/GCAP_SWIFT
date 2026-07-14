@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		84BCFE9F2EC61AE0006D9E40 /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 84BCFE9E2EC61AE0006D9E40 /* CoreXLSX */; };
+		A1B2C3D42EC90001006D9E40 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D52EC90001006D9E40 /* OneSignalFramework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				84BCFE9F2EC61AE0006D9E40 /* CoreXLSX in Frameworks */,
+				A1B2C3D42EC90001006D9E40 /* OneSignalFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 			name = GCAP;
 			packageProductDependencies = (
 				84BCFE9E2EC61AE0006D9E40 /* CoreXLSX */,
+				A1B2C3D52EC90001006D9E40 /* OneSignalFramework */,
 			);
 			productName = GCAP;
 			productReference = 84DB8DF52EBB711B005328DC /* GCAP.app */;
@@ -203,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				84BCFE9D2EC61A2B006D9E40 /* XCRemoteSwiftPackageReference "CoreXLSX" */,
+				A1B2C3D62EC90001006D9E40 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 84DB8DF62EBB711B005328DC /* Products */;
@@ -403,6 +407,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = GCAP/GCAP.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -431,6 +436,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = GCAP/GCAP.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -571,6 +577,14 @@
 				minimumVersion = 0.14.2;
 			};
 		};
+		A1B2C3D62EC90001006D9E40 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-XCFramework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.9;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -578,6 +592,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 84BCFE9D2EC61A2B006D9E40 /* XCRemoteSwiftPackageReference "CoreXLSX" */;
 			productName = CoreXLSX;
+		};
+		A1B2C3D52EC90001006D9E40 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D62EC90001006D9E40 /* XCRemoteSwiftPackageReference "OneSignal-XCFramework" */;
+			productName = OneSignalFramework;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

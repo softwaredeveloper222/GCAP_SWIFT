@@ -9,7 +9,9 @@ import SwiftUI
 
 @main
 struct GCAPApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var showSplash = true
+
     var body: some Scene {
         WindowGroup {
             ZStack{
@@ -20,12 +22,15 @@ struct GCAPApp: App {
                         withAnimation(.easeOut(duration: 0.45)) {
                             showSplash = false
                         }
+                        // Show Allow Notifications after splash → home is visible.
+                        PushPermissionRequester.requestAfterSplash()
                     }
                     .transition(.opacity)
                     .zIndex(1)
                     .ignoresSafeArea()
                     .task{
                         CalculatorAnalytics.shared.initIfNeeded()
+                        await SafetyDaysNotificationService.shared.refresh()
 
                         try? await Task.sleep(nanoseconds: 100_000_000)
                         
