@@ -6,7 +6,9 @@
 import UIKit
 import OneSignalFramework
 
-final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener {
+final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener,
+    OSNotificationLifecycleListener
+{
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -16,44 +18,66 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
             return true
         }
 
-        // Verbose logs — filter Xcode console for OneSignal
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         OneSignal.initialize(OneSignalConfig.appId, withLaunchOptions: launchOptions)
+        OneSignal.Notifications.addForegroundLifecycleListener(self)
         OneSignal.Notifications.addClickListener(self)
         NSLog("[OneSignal] initialized appId=%@", OneSignalConfig.appId)
-
-        // Permission is requested after splash (see GCAPApp / PushPermissionRequester)
 
         return true
     }
 
-    func onClick(event: OSNotificationClickEvent) {
-        let data = event.notification.additionalData
-        let type = (data?["type"] as? String) ?? ""
-        guard type == "safety_days" else { return }
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        Task { @MainActor in
+            // Android NSE equivalent when a Safety Days push is already in the tray.
+            SafetyDaysNotificationService.shared.syncUnreadFromDeliveredNotifications()
+            SafetyDaysNotificationService.shared.reloadUnreadFlag()
+        }
+    }
 
-        let contentId = Self.contentId(from: data)
+    // MARK: - OSNotificationLifecycleListener (foreground receive)
+
+    func onWillDisplay(event: OSNotificationWillDisplayEvent) {
+        let data = event.notification.additionalData as? [String: Any]
+        guard SafetyDaysNotificationService.isSafetyDaysPush(data) else {
+            // Still show non–Safety Days pushes while the app is open.
+            event.notification.display()
+            return
+        }
+
+        let contentId = SafetyDaysNotificationService.contentId(from: data)
+        let onesignalId = event.notification.notificationId
+        NSLog("[OneSignal] foreground push contentId=%@", contentId ?? "(none)")
+
+        Task { @MainActor in
+            SafetyDaysNotificationService.shared.markPushArrived(
+                contentId: contentId,
+                onesignalId: onesignalId
+            )
+        }
+        // OneSignal 5+: must call display() for a foreground banner.
+        event.notification.display()
+    }
+
+    // MARK: - OSNotificationClickListener
+
+    func onClick(event: OSNotificationClickEvent) {
+        let data = event.notification.additionalData as? [String: Any]
+        guard SafetyDaysNotificationService.isSafetyDaysPush(data) else { return }
+
+        let contentId = SafetyDaysNotificationService.contentId(from: data)
+        let onesignalId = event.notification.notificationId
         NSLog(
             "[OneSignal] safety_days click contentId=%@",
             contentId ?? "(none)"
         )
 
         Task { @MainActor in
+            SafetyDaysNotificationService.shared.markPushArrived(
+                contentId: contentId,
+                onesignalId: onesignalId
+            )
             PushNavigationStore.shared.openSafetyDays(contentId: contentId)
         }
-    }
-
-    private static func contentId(from data: [AnyHashable: Any]?) -> String? {
-        guard let data else { return nil }
-        for key in ["contentId", "id"] {
-            if let value = data[key] as? String {
-                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty { return trimmed }
-            }
-            if let value = data[key] as? NSNumber {
-                return value.stringValue
-            }
-        }
-        return nil
     }
 }
