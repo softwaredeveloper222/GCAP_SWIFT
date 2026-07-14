@@ -6,7 +6,7 @@
 import UIKit
 import OneSignalFramework
 
-final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener {
+final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener, OSNotificationLifecycleListener {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -20,12 +20,29 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         OneSignal.initialize(OneSignalConfig.appId, withLaunchOptions: launchOptions)
         OneSignal.Notifications.addClickListener(self)
+        OneSignal.Notifications.addForegroundLifecycleListener(self)
         NSLog("[OneSignal] initialized appId=%@", OneSignalConfig.appId)
 
         // Permission is requested after splash (see GCAPApp / PushPermissionRequester)
 
         return true
     }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        // After a background push, refresh so the New badge can appear from CMS version.
+        Task { @MainActor in
+            await SafetyDaysNotificationService.shared.refresh()
+        }
+    }
+
+    // MARK: - Foreground notification (badge immediately)
+
+    func onWillDisplay(event: OSNotificationWillDisplayEvent) {
+        handleIncomingSafetyDaysPush(additionalData: event.notification.additionalData)
+        // Leave default display behavior (do not call preventDefault).
+    }
+
+    // MARK: - Notification tap
 
     func onClick(event: OSNotificationClickEvent) {
         let data = event.notification.additionalData
@@ -39,7 +56,23 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
         )
 
         Task { @MainActor in
+            SafetyDaysNotificationService.shared.markUnreadFromPush(contentId: contentId)
             PushNavigationStore.shared.openSafetyDays(contentId: contentId)
+        }
+    }
+
+    private func handleIncomingSafetyDaysPush(additionalData: [AnyHashable: Any]?) {
+        let type = (additionalData?["type"] as? String) ?? ""
+        guard type == "safety_days" else { return }
+
+        let contentId = Self.contentId(from: additionalData)
+        NSLog(
+            "[OneSignal] safety_days received (foreground) contentId=%@",
+            contentId ?? "(none)"
+        )
+
+        Task { @MainActor in
+            SafetyDaysNotificationService.shared.markUnreadFromPush(contentId: contentId)
         }
     }
 
