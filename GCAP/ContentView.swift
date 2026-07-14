@@ -14,6 +14,7 @@ struct MenuItem: Identifiable {
     let router: AppRoute
 }
 
+
 struct ContentView: View {
     let menuItems: [MenuItem] = [
         MenuItem(title: "Calculators", icon: "ic_calculators", router: AppRoute.calculators),
@@ -25,44 +26,88 @@ struct ContentView: View {
         MenuItem(title: "Industry Contacts", icon: "ic_partners", router: AppRoute.industry_contacts),
         MenuItem(title: "Notification", icon: "ic_notification", router: AppRoute.safety_days),
         MenuItem(title: "Contact Us", icon: "ic_contact", router: AppRoute.contact_us)
-    ]
-
+        ]
+    
     @State private var path = NavigationPath()
+    
     @State private var headerText = " "
     /// Set when opening Safety Days from a push tap (CMS content id).
     @State private var safetyDaysContentId: String?
     @ObservedObject private var safetyDaysService = SafetyDaysNotificationService.shared
     @ObservedObject private var pushNavigation = PushNavigationStore.shared
-
-    private let headerTopInset: CGFloat = Headerbar_Bottom_Padding_Size - 30
-
+            
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack(path: $path){
             ZStack {
-                HeaderView(headerText: headerText)
+                ZStack() {
+                    HeaderView(headerText: headerText)
+                    VStack{
+                        Spacer().frame(height: Headerbar_Bottom_Padding_Size - 30)
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                ForEach(menuItems) { item in
+                                    HStack {
+                                        Image(item.icon)
+                                            .resizable()
+                                            .frame(width: 78, height: 78)
+                                        
+                                        Text(item.title)
+                                            .foregroundColor(.black)
+                                            .padding(.leading, 8)
+                                            .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold))
+                                        
+                                        Spacer()
 
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(menuItems) { item in
-                            menuRow(item)
+                                        if item.router == .safety_days && safetyDaysService.hasUnreadUpdate {
+                                            Text("New")
+                                                .font(.system(size: 11, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Color.red)
+                                                .cornerRadius(8)
+                                        }
+                                        
+                                        Image("right_arrow")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16, height: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16)
+                                    }
+                                    .padding(.top, 12)
+                                    .padding(.bottom, 12)
+                                    .padding(.leading, 10)
+                                    .padding(.trailing, 15)
+                                    .background(Color.white)
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.black.opacity(0.2), radius: 3, x: 1, y: 2)
+                                    .onTapGesture{
+                                        path.append(item.router)
+                                    }
+                                }
+                            }
+                            .padding()
+                            .padding(.bottom, 36)
+                        }
+                        .refreshable {
+                            await safetyDaysService.refresh()
                         }
                     }
-                    .padding()
-                    .padding(.top, headerTopInset)
-                    .padding(.bottom, 36)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white)
             .ignoresSafeArea()
             .navigationBarHidden(true)
+            .task {
+                await safetyDaysService.refresh()
+            }
             .onAppear {
                 openPendingPushRouteIfNeeded()
             }
             .onChange(of: pushNavigation.pendingRoute) { _, _ in
                 openPendingPushRouteIfNeeded()
             }
-            .navigationDestination(for: AppRoute.self) { route in
+            .navigationDestination(for: AppRoute.self){ route in
                 switch route {
                 case .calculators:
                     CalculatorsView(path: $path, headerText: "\(AppRoute.calculators.rawValue)")
@@ -89,64 +134,15 @@ struct ContentView: View {
                     }
                 case .contact_us:
                     ContactUsView(path: $path, headerText: "\(AppRoute.contact_us.rawValue)")
+                    
                 }
             }
-            .navigationDestination(for: ContactRoute.self) { route in
+            .navigationDestination(for: ContactRoute.self){ route in
                 switch route {
                 case .contact_detail(let industryContactItem, let headerText):
-                    ContactsChildView(
-                        path: $path,
-                        industryItemData: industryContactItem!,
-                        headerText: headerText
-                    )
+                    ContactsChildView(path: $path, industryItemData: (industryContactItem)!, headerText: headerText)
                 }
             }
-        }
-    }
-
-    private func menuRow(_ item: MenuItem) -> some View {
-        HStack {
-            Image(item.icon)
-                .resizable()
-                .frame(width: 78, height: 78)
-
-            Text(item.title)
-                .foregroundColor(.black)
-                .padding(.leading, 8)
-                .font(.system(
-                    size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18,
-                    weight: .semibold
-                ))
-
-            Spacer()
-
-            if item.router == .safety_days && safetyDaysService.hasUnreadUpdate {
-                Text("New")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.red)
-                    .cornerRadius(8)
-            }
-
-            Image("right_arrow")
-                .resizable()
-                .scaledToFit()
-                .frame(
-                    width: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16,
-                    height: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16
-                )
-        }
-        .padding(.top, 12)
-        .padding(.bottom, 12)
-        .padding(.leading, 10)
-        .padding(.trailing, 15)
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.2), radius: 3, x: 1, y: 2)
-        .onTapGesture {
-            path.append(item.router)
         }
     }
 
@@ -159,20 +155,21 @@ struct ContentView: View {
         path = NavigationPath()
         path.append(pending.route)
     }
+
 }
 
 extension Color {
     init(hex: String) {
         var cleaned = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         cleaned = cleaned.replacingOccurrences(of: "#", with: "")
-
+        
         var value: UInt64 = 0
         Scanner(string: cleaned).scanHexInt64(&value)
-
+        
         let r = Double((value >> 16) & 0xFF) / 255.0
         let g = Double((value >> 8) & 0xFF) / 255.0
         let b = Double(value & 0xFF) / 255.0
-
+        
         self.init(red: r, green: g, blue: b)
     }
 }

@@ -6,9 +6,7 @@
 import UIKit
 import OneSignalFramework
 
-final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener,
-    OSNotificationLifecycleListener
-{
+final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickListener {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -21,7 +19,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
         // Verbose logs — filter Xcode console for OneSignal
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
         OneSignal.initialize(OneSignalConfig.appId, withLaunchOptions: launchOptions)
-        OneSignal.Notifications.addForegroundLifecycleListener(self)
         OneSignal.Notifications.addClickListener(self)
         NSLog("[OneSignal] initialized appId=%@", OneSignalConfig.appId)
 
@@ -29,24 +26,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
 
         return true
     }
-
-    // MARK: - OSNotificationLifecycleListener (foreground receive)
-
-    func onWillDisplay(event: OSNotificationWillDisplayEvent) {
-        let data = event.notification.additionalData
-        let type = (data?["type"] as? String) ?? ""
-        guard type == "safety_days" else { return }
-
-        let contentId = Self.contentId(from: data)
-        NSLog("[OneSignal] foreground push contentId=%@", contentId ?? "(none)")
-
-        Task { @MainActor in
-            SafetyDaysNotificationService.shared.markPushArrived(contentId: contentId)
-        }
-        // Keep default system banner while app is open.
-    }
-
-    // MARK: - OSNotificationClickListener
 
     func onClick(event: OSNotificationClickEvent) {
         let data = event.notification.additionalData
@@ -60,7 +39,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
         )
 
         Task { @MainActor in
-            SafetyDaysNotificationService.shared.markPushArrived(contentId: contentId)
             PushNavigationStore.shared.openSafetyDays(contentId: contentId)
         }
     }
