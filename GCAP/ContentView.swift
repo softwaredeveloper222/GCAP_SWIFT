@@ -33,6 +33,7 @@ struct ContentView: View {
     @State private var headerText = " "
     /// Set when opening Safety Days from a push tap (CMS content id).
     @State private var safetyDaysContentId: String?
+    @State private var isPullRefreshing = false
     @ObservedObject private var safetyDaysService = SafetyDaysNotificationService.shared
     @ObservedObject private var pushNavigation = PushNavigationStore.shared
             
@@ -41,8 +42,18 @@ struct ContentView: View {
             ZStack {
                 ZStack() {
                     HeaderView(headerText: headerText)
-                    VStack{
+                    VStack(spacing: 0){
                         Spacer().frame(height: Headerbar_Bottom_Padding_Size - 30)
+
+                        // Visible refresh indicator (system spinner is often hidden under the header)
+                        if isPullRefreshing {
+                            ProgressView()
+                                .controlSize(.regular)
+                                .tint(Color(hex: "#2D2F93"))
+                                .frame(maxWidth: .infinity)
+                                .padding(.bottom, 10)
+                        }
+
                         ScrollView {
                             LazyVStack(spacing: 16) {
                                 ForEach(menuItems) { item in
@@ -88,8 +99,9 @@ struct ContentView: View {
                             .padding()
                             .padding(.bottom, 36)
                         }
+                        .tint(Color(hex: "#2D2F93"))
                         .refreshable {
-                            await safetyDaysService.refresh()
+                            await refreshMainMenuNotifications()
                         }
                     }
                 }
@@ -150,6 +162,18 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    private func refreshMainMenuNotifications() async {
+        isPullRefreshing = true
+        let started = Date()
+        await safetyDaysService.refresh()
+        // Keep spinner visible long enough to notice even on a fast network.
+        let elapsed = Date().timeIntervalSince(started)
+        if elapsed < 0.45 {
+            try? await Task.sleep(nanoseconds: UInt64((0.45 - elapsed) * 1_000_000_000))
+        }
+        isPullRefreshing = false
     }
 
     private func openPendingPushRouteIfNeeded() {
