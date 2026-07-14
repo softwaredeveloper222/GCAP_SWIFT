@@ -50,8 +50,12 @@ final class SafetyDaysNotificationService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 30
+        // Always hit the network on pull-to-refresh / reopen so CMS updates show up.
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("Bearer \(AnalyticsConfig.apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        request.setValue("no-cache", forHTTPHeaderField: "Pragma")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)

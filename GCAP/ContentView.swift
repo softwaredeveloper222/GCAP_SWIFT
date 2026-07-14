@@ -44,7 +44,7 @@ struct ContentView: View {
                     VStack{
                         Spacer().frame(height: Headerbar_Bottom_Padding_Size - 30)
                         ScrollView {
-                            VStack(spacing: 16) {
+                            LazyVStack(spacing: 16) {
                                 ForEach(menuItems) { item in
                                     HStack {
                                         Image(item.icon)
@@ -103,6 +103,12 @@ struct ContentView: View {
             }
             .onAppear {
                 openPendingPushRouteIfNeeded()
+            }
+            .onChange(of: path.count) { _, count in
+                // Returning to the main menu — refresh Notification badge/content.
+                if count == 0 {
+                    Task { await safetyDaysService.refresh() }
+                }
             }
             .onChange(of: pushNavigation.pendingRoute) { _, _ in
                 openPendingPushRouteIfNeeded()
