@@ -18,12 +18,23 @@ final class SafetyDaysNotificationService: ObservableObject {
     private let cacheKey = "safety_days_cached_payload"
     private let seenVersionKey = "safety_days_seen_version"
     private let seenIdKey = "safety_days_seen_id"
+    private let pushUnreadKey = "safety_days_push_unread"
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
 
     private init() {
         loadCache()
         refreshUnreadFlag()
+    }
+
+    /// Called when a safety_days push arrives (foreground banner or notification tap).
+    func markPushArrived(contentId: String? = nil) {
+        UserDefaults.standard.set(true, forKey: pushUnreadKey)
+        refreshUnreadFlag()
+        NSLog("[SafetyDaysNotify] Push unread flagged contentId=%@", contentId ?? "(none)")
+        Task {
+            await refresh(contentId: contentId)
+        }
     }
 
     /// - Parameter contentId: When set (push tap), fetch that CMS page via `?id=`.
@@ -50,8 +61,12 @@ final class SafetyDaysNotificationService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 30
+        // Always hit the network on pull-to-refresh / reopen so CMS updates show up.
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("Bearer \(AnalyticsConfig.apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        request.setValue("no-cache", forHTTPHeaderField: "Pragma")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -90,10 +105,15 @@ final class SafetyDaysNotificationService: ObservableObject {
     func markSeen(id: String, version: Int) {
         UserDefaults.standard.set(id, forKey: seenIdKey)
         UserDefaults.standard.set(version, forKey: seenVersionKey)
+        UserDefaults.standard.set(false, forKey: pushUnreadKey)
         refreshUnreadFlag()
     }
 
     private func refreshUnreadFlag() {
+        if UserDefaults.standard.bool(forKey: pushUnreadKey) {
+            hasUnreadUpdate = true
+            return
+        }
         guard let payload else {
             hasUnreadUpdate = false
             return

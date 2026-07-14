@@ -10,13 +10,10 @@
 
 ## Behavior
 
-1. **App launch** — `AppDelegate` initializes OneSignal (VERBOSE logs), foreground lifecycle + click listeners. No permission prompt yet.
-2. **After splash** — `PushPermissionRequester.requestAfterSplash()` shows Allow Notifications, then `pushSubscription.optIn()`. Splash may prefetch Safety Days CMS once.
-3. **Push receive (foreground)** — `onWillDisplay` flags unread + shows system banner (`display()`). Home **New** badge appears immediately.
-4. **Push receive (background / tray)** — On become-active / home appear, delivered notifications are scanned; a `type=safety_days` push flags unread (parity with Android NSE).
-5. **Push tap** — opens Safety Days and fetches `?id=<contentId>` from `data.contentId` / `data.id`.
-6. **Unread badge** — `push_unread` **or** unseen CMS `id`/`version`. Cleared when Safety Days is opened (`markSeen`).
-7. **Main menu** — no pull-to-refresh / no network refresh (badge only).
+1. **App launch** — `AppDelegate` initializes OneSignal (VERBOSE logs) and registers the Safety Days click listener. No permission prompt yet.
+2. **After splash** — `PushPermissionRequester.requestAfterSplash()` shows the Allow Notifications alert, then calls `pushSubscription.optIn()` (same as Android).
+3. **Push tap** (`type=safety_days`) — opens Safety Days and fetches `?id=<contentId>` from push `data.contentId` / `data.id`.
+4. **Unread badge** — tracks seen by **content id + version** (same as Android).
 
 ## CMS push payload
 
