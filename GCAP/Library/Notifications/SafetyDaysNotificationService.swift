@@ -17,6 +17,7 @@ final class SafetyDaysNotificationService: ObservableObject {
 
     private let cacheKey = "safety_days_cached_payload"
     private let seenVersionKey = "safety_days_seen_version"
+    private let seenIdKey = "safety_days_seen_id"
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
 
@@ -25,9 +26,20 @@ final class SafetyDaysNotificationService: ObservableObject {
         refreshUnreadFlag()
     }
 
-    func refresh() async {
+    /// - Parameter contentId: When set (push tap), fetch that CMS page via `?id=`.
+    func refresh(contentId: String? = nil) async {
         guard AnalyticsConfig.enabled else { return }
-        guard let url = URL(string: AnalyticsConfig.baseURL + "api/notifications/safety-days/public") else {
+
+        var components = URLComponents(
+            string: AnalyticsConfig.baseURL + "api/notifications/safety-days/public"
+        )
+        let trimmedId = contentId?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmedId, !trimmedId.isEmpty {
+            components?.queryItems = [URLQueryItem(name: "id", value: trimmedId)]
+        }
+
+        guard let url = components?.url else {
             lastError = "Invalid notification URL"
             return
         }
@@ -58,7 +70,10 @@ final class SafetyDaysNotificationService: ObservableObject {
             lastError = nil
             lastFetchFromNetwork = true
             NSLog(
-                "[SafetyDaysNotify] Loaded version \(decoded.version) with \(decoded.content.galleryImages.count) images"
+                "[SafetyDaysNotify] Loaded id=%@ version=%d images=%d",
+                decoded.id,
+                decoded.version,
+                decoded.content.galleryImages.count
             )
         } catch {
             lastError = error.localizedDescription
@@ -68,14 +83,29 @@ final class SafetyDaysNotificationService: ObservableObject {
     }
 
     func markSeen() {
-        guard let version = payload?.version else { return }
+        guard let payload else { return }
+        markSeen(id: payload.id, version: payload.version)
+    }
+
+    func markSeen(id: String, version: Int) {
+        UserDefaults.standard.set(id, forKey: seenIdKey)
         UserDefaults.standard.set(version, forKey: seenVersionKey)
         refreshUnreadFlag()
     }
 
     private func refreshUnreadFlag() {
-        let seen = UserDefaults.standard.integer(forKey: seenVersionKey)
-        hasUnreadUpdate = (payload?.version ?? 0) > seen
+        guard let payload else {
+            hasUnreadUpdate = false
+            return
+        }
+        let seenId = UserDefaults.standard.string(forKey: seenIdKey)
+        let seenVersion = UserDefaults.standard.integer(forKey: seenVersionKey)
+        // Different content id counts as unread even if version numbers overlap.
+        if let seenId, seenId != payload.id {
+            hasUnreadUpdate = true
+            return
+        }
+        hasUnreadUpdate = payload.version > seenVersion
     }
 
     private func loadCache() {

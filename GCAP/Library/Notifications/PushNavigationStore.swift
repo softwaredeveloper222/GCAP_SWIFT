@@ -11,16 +11,22 @@ final class PushNavigationStore: ObservableObject {
     static let shared = PushNavigationStore()
 
     @Published var pendingRoute: AppRoute?
+    /// CMS content id from OneSignal `data.contentId` / `data.id` (fetch that page).
+    @Published var pendingContentId: String?
 
     private init() {}
 
-    func openSafetyDays() {
+    func openSafetyDays(contentId: String? = nil) {
+        let trimmed = contentId?.trimmingCharacters(in: .whitespacesAndNewlines)
+        pendingContentId = (trimmed?.isEmpty == false) ? trimmed : nil
         pendingRoute = .safety_days
     }
 
-    func consumePendingRoute() -> AppRoute? {
-        let route = pendingRoute
+    func consumePendingRoute() -> (route: AppRoute, contentId: String?)? {
+        guard let route = pendingRoute else { return nil }
+        let contentId = pendingContentId
         pendingRoute = nil
-        return route
+        pendingContentId = nil
+        return (route, contentId)
     }
 }

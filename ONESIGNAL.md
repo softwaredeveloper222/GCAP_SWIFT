@@ -11,12 +11,26 @@
 ## Behavior
 
 1. **App launch** — `AppDelegate` initializes OneSignal (VERBOSE logs) and registers the Safety Days click listener. No permission prompt yet.
-2. **After splash** — `PushPermissionRequester.requestAfterSplash()` shows the Allow Notifications alert (~400ms after home appears).
+2. **After splash** — `PushPermissionRequester.requestAfterSplash()` shows the Allow Notifications alert, then calls `pushSubscription.optIn()` (same as Android).
+3. **Push tap** (`type=safety_days`) — opens Safety Days and fetches `?id=<contentId>` from push `data.contentId` / `data.id`.
+4. **Unread badge** — tracks seen by **content id + version** (same as Android).
+
+## CMS push payload
+
+```json
+{
+  "type": "safety_days",
+  "version": "12",
+  "contentId": "<page-id>",
+  "id": "<page-id>"
+}
+```
 
 ## Xcode checklist
 
-1. OneSignal dashboard → enable **Apple iOS** and upload your APNs `.p8` key.
+1. OneSignal dashboard → enable **Apple iOS** and upload your APNs `.p8` Auth Key (Settings → Platforms → Apple iOS).
 2. Package `https://github.com/OneSignal/OneSignal-XCFramework` (product: **OneSignalFramework**) is already linked.
 3. Signing & Capabilities → **Push Notifications** (via entitlements).
 4. For App Store / TestFlight, set `aps-environment` to `production` in entitlements.
 5. Test on a **physical device** (Simulator cannot register for real push).
+6. After allowing notifications, confirm Audience → Subscriptions shows Channel=**Push**, Platform=**iOS**, Status=**Subscribed**.

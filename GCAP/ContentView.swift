@@ -31,6 +31,8 @@ struct ContentView: View {
     @State private var path = NavigationPath()
     
     @State private var headerText = " "
+    /// Set when opening Safety Days from a push tap (CMS content id).
+    @State private var safetyDaysContentId: String?
     @ObservedObject private var safetyDaysService = SafetyDaysNotificationService.shared
     @ObservedObject private var pushNavigation = PushNavigationStore.shared
             
@@ -122,7 +124,14 @@ struct ContentView: View {
                 case .industry_contacts:
                     IndustryContactsView(path: $path, headerText: "\(AppRoute.industry_contacts.rawValue)")
                 case .safety_days:
-                    SafetyDaysView(path: $path, headerText: "\(AppRoute.safety_days.rawValue)")
+                    SafetyDaysView(
+                        path: $path,
+                        headerText: "\(AppRoute.safety_days.rawValue)",
+                        contentId: safetyDaysContentId
+                    )
+                    .onDisappear {
+                        safetyDaysContentId = nil
+                    }
                 case .contact_us:
                     ContactUsView(path: $path, headerText: "\(AppRoute.contact_us.rawValue)")
                     
@@ -138,8 +147,13 @@ struct ContentView: View {
     }
 
     private func openPendingPushRouteIfNeeded() {
-        guard let route = pushNavigation.consumePendingRoute() else { return }
-        path.append(route)
+        guard let pending = pushNavigation.consumePendingRoute() else { return }
+        if pending.route == .safety_days {
+            safetyDaysContentId = pending.contentId
+        }
+        // Match Android CLEAR_TOP: open Safety Days from root so push content is shown.
+        path = NavigationPath()
+        path.append(pending.route)
     }
 
 }

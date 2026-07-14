@@ -32,8 +32,28 @@ final class AppDelegate: NSObject, UIApplicationDelegate, OSNotificationClickLis
         let type = (data?["type"] as? String) ?? ""
         guard type == "safety_days" else { return }
 
+        let contentId = Self.contentId(from: data)
+        NSLog(
+            "[OneSignal] safety_days click contentId=%@",
+            contentId ?? "(none)"
+        )
+
         Task { @MainActor in
-            PushNavigationStore.shared.openSafetyDays()
+            PushNavigationStore.shared.openSafetyDays(contentId: contentId)
         }
+    }
+
+    private static func contentId(from data: [AnyHashable: Any]?) -> String? {
+        guard let data else { return nil }
+        for key in ["contentId", "id"] {
+            if let value = data[key] as? String {
+                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty { return trimmed }
+            }
+            if let value = data[key] as? NSNumber {
+                return value.stringValue
+            }
+        }
+        return nil
     }
 }

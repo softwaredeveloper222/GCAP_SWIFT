@@ -16,6 +16,8 @@ struct SafetyDaysView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var path: NavigationPath
     let headerText: String
+    /// From OneSignal push `data.contentId` — fetch that CMS page (`?id=`).
+    var contentId: String? = nil
 
     @ObservedObject private var service = SafetyDaysNotificationService.shared
     @State private var webDestination: SafetyDaysWebDestination?
@@ -91,7 +93,7 @@ struct SafetyDaysView: View {
             SafetyDaysWebView(title: destination.title, urlString: destination.urlString)
         }
         .task {
-            await service.refresh()
+            await service.refresh(contentId: contentId)
             service.markSeen()
         }
     }
