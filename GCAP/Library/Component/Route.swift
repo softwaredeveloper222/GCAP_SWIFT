@@ -16,7 +16,7 @@ enum AppRoute: String, Hashable {
     case animations = "Animations"
     case magnetic_tool = "Magnetic Tool"
     case industry_contacts = "Industry Contacts"
-    case safety_days = "Safety Days"
+    case safety_days = "Notification"
     case contact_us = "Contact Us"
 }
 
