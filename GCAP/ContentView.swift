@@ -24,7 +24,7 @@ struct ContentView: View {
         MenuItem(title: "Animations", icon: "ic_animations", router: AppRoute.animations),
         MenuItem(title: "Magnetic Tool", icon: "ic_magnet", router: AppRoute.magnetic_tool),
         MenuItem(title: "Industry Contacts", icon: "ic_partners", router: AppRoute.industry_contacts),
-        MenuItem(title: "Safety Days", icon: "ic_safety_days", router: AppRoute.safety_days),
+        MenuItem(title: "Notification", icon: "ic_notification", router: AppRoute.safety_days),
         MenuItem(title: "Contact Us", icon: "ic_contact", router: AppRoute.contact_us)
         ]
     
