@@ -341,14 +341,8 @@ struct PressureView: View {
                 .onSubmit {
                     changedValue = Int(arc4random())
                 }
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                            changedValue = Int(arc4random())
-                        }
-                    }
+                .keyboardDoneButton {
+                    changedValue = Int(arc4random())
                 }
         }
     }

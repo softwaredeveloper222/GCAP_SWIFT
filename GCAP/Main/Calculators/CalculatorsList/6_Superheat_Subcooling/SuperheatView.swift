@@ -186,18 +186,12 @@ struct SuperheatView: View {
                 .onSubmit {
                     chageValue = Int(arc4random())
                 }
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                            chageValue = Int(arc4random())
-                        }
-                    }
+                .keyboardDoneButton {
+                    chageValue = Int(arc4random())
                 }
         }
     }
-    
+
     private func textColumn(title: String, subtitle: String? = nil, value: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {

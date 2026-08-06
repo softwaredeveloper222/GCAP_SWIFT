@@ -49,13 +49,8 @@ struct DualAlignedTextField: View {
                 .onSubmit {
                     submit()
                 }
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            submit()
-                        }
-                    }
+                .keyboardDoneButton {
+                    submit()
                 }
                 .foregroundStyle(Color.black)
         }
@@ -87,6 +82,9 @@ struct IconTextField: View {
                     .font(.system(size: 12))
                     .multilineTextAlignment(.leading)
                     .focused($isFocused)
+                    .keyboardDoneButton {
+                        isFocused = false
+                    }
             }
             .padding(10)
         }
@@ -135,6 +133,9 @@ struct IconTextEditor: View {
                         .background(Color(.systemGray6))
                         .focused($isFocused)
                         .font(.system(size: 12))
+                        .keyboardDoneButton {
+                            isFocused = false
+                        }
                 }
             }
         }
@@ -187,6 +188,9 @@ struct CustomTextEditor: View {
 //                    .foregroundStyle(Color.black)
                     .focused($isFocused)
                     .font(.system(size: 12))
+                    .keyboardDoneButton {
+                        isFocused = false
+                    }
             }
         }
         .padding(8)
