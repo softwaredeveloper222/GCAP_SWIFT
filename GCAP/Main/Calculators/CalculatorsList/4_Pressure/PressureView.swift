@@ -193,6 +193,9 @@ struct PressureView: View {
 
                 loadingManager.hide()
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            changedValue = Int(arc4random())
+        }
         .onChange(of: changedValue){
             if changedValue == 0{
                 return
@@ -339,9 +342,6 @@ struct PressureView: View {
                     }
                 }
                 .onSubmit {
-                    changedValue = Int(arc4random())
-                }
-                .keyboardDoneButton {
                     changedValue = Int(arc4random())
                 }
         }

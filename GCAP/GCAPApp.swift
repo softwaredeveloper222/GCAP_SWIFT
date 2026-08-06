@@ -41,8 +41,7 @@ struct GCAPApp: App {
                     }
                 }
             }
-           
+            .hideKeyboardOnTapOutside()
         }
-        
     }
 }

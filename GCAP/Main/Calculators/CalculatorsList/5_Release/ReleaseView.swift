@@ -396,6 +396,13 @@ struct ReleaseView: View {
                 loadingManager.hide()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            changed_first_card = Int(arc4random())
+            changed_second_card = Int(arc4random())
+            changed_third_card = Int(arc4random())
+            changed_forth_card = Int(arc4random())
+            changed_fifth_card = Int(arc4random())
+        }
         .onChange(of: changed_first_card){
             
             let temperature = ExcelDataModel.shared.PSIG_vlookup(lookupValue: Liquid_realease_Round_opening_Gauge, tableArray: PSIG_rows, columnIndex: 5) ?? "0"
@@ -537,9 +544,6 @@ struct ReleaseView: View {
                 }
                 .multilineTextAlignment(.leading)
                 .onSubmit {
-                    changed_card.wrappedValue = Int(arc4random())
-                }
-                .keyboardDoneButton {
                     changed_card.wrappedValue = Int(arc4random())
                 }
         }

@@ -137,6 +137,9 @@ struct SuperheatView: View {
                 loadingManager.hide()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            chageValue = Int(arc4random())
+        }
         .onChange(of: chageValue){
             performCalculation()
         }
@@ -184,9 +187,6 @@ struct SuperheatView: View {
                     }
                 }
                 .onSubmit {
-                    chageValue = Int(arc4random())
-                }
-                .keyboardDoneButton {
                     chageValue = Int(arc4random())
                 }
         }
